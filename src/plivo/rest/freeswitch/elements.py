@@ -161,7 +161,7 @@ class Element(object):
         return self._element
 
     def parse_element(self, element, uri=None):
-        self.uri = uri 
+        self.uri = uri
         self._element = element
         self.prepare_attributes(element)
         self.prepare_text(element)
@@ -260,7 +260,7 @@ class Conference(Element):
     callbackMethod: submit to 'callbackUrl' url using GET or POST
     digitsMatch: a list of matching digits to send with callbackUrl
             Can be a list of digits patterns separated by comma.
-    floorEvent: 'true' or 'false'. When this member holds the floor, 
+    floorEvent: 'true' or 'false'. When this member holds the floor,
             send notification to callbackUrl. (default 'false')
     """
     DEFAULT_TIMELIMIT = 0
@@ -997,6 +997,8 @@ class GetDigits(Element):
     method: submit to 'action' url using GET or POST
     numDigits: how many digits to gather before returning
     timeout: wait for this many seconds before retry or returning
+    digit_timeout: wait for this many seconds for consecutive digits
+        before retry or returning
     finishOnKey: key that triggers the end of caller input
     tries: number of tries to execute all says and plays one by one
     playBeep: play a after all plays and says finish
@@ -1011,6 +1013,7 @@ class GetDigits(Element):
         self.nestables = ('Speak', 'Play', 'Wait')
         self.num_digits = None
         self.timeout = None
+        self.digit_timeout = None
         self.finish_on_key = None
         self.action = None
         self.play_beep = ""
@@ -1034,9 +1037,16 @@ class GetDigits(Element):
         try:
             timeout = int(self.extract_attribute_value("timeout", self.DEFAULT_TIMEOUT))
         except ValueError:
-            timeout = self.DEFAULT_TIMEOUT * 1000
+            timeout = self.DEFAULT_TIMEOUT
         if timeout < 1:
             raise RESTFormatException("GetDigits 'timeout' must be a positive integer")
+
+        try:
+            digit_timeout = int(self.extract_attribute_value("digitTimeout", self.DEFAULT_TIMEOUT * 1000))
+        except ValueError:
+            digit_timeout = self.DEFAULT_TIMEOUT * 1000
+        if digit_timeout < 1:
+            raise RESTFormatException("GetDigits 'digit_timeout' must be a positive integer")
 
         finish_on_key = self.extract_attribute_value("finishOnKey")
         self.play_beep = self.extract_attribute_value("playBeep") == 'true'
@@ -1063,6 +1073,7 @@ class GetDigits(Element):
             self.action = None
         self.num_digits = num_digits
         self.timeout = timeout * 1000
+        self.digit_timeout = digit_timeout * 1000
         self.finish_on_key = finish_on_key
         self.retries = retries
 
@@ -1127,7 +1138,9 @@ class GetDigits(Element):
                             sound_files=self.sound_files,
                             invalid_file=invalid_sound,
                             valid_digits=self.valid_digits,
-                            play_beep=self.play_beep)
+                            play_beep=self.play_beep,
+                            digit_timeout=self.digit_timeout,
+        )
         event = outbound_socket.wait_for_action()
         digits = outbound_socket.get_var('pagd_input')
         # digits received
@@ -1361,7 +1374,7 @@ class PreAnswer(Element):
     def prepare(self, outbound_socket):
         for child_instance in self.children:
             if hasattr(child_instance, "prepare"):
-                outbound_socket.validate_element(child_instance.get_element(), 
+                outbound_socket.validate_element(child_instance.get_element(),
                                                  child_instance)
                 child_instance.prepare(outbound_socket)
 
@@ -1546,7 +1559,7 @@ class SIPTransfer(Element):
                 outbound_socket.deflect(self.sip_url)
             else:
                 outbound_socket.log.debug("SIPTransfer using redirect")
-                outbound_socket.redirect(self.sip_url) 
+                outbound_socket.redirect(self.sip_url)
             raise RESTSIPTransferException(self.sip_url)
         raise RESTFormatException("SIPTransfer must have a sip uri")
 
@@ -1957,7 +1970,7 @@ class GetSpeech(Element):
                 timer.cancel()
                 if gpath:
                     try:
-                        os.remove(gpath) 
+                        os.remove(gpath)
                     except:
                         pass
 
