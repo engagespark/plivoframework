@@ -1042,11 +1042,11 @@ class GetDigits(Element):
             raise RESTFormatException("GetDigits 'timeout' must be a positive integer")
 
         try:
-            digit_timeout = int(self.extract_attribute_value("digitTimeout", self.DEFAULT_TIMEOUT * 1000))
+            digit_timeout = int(self.extract_attribute_value("digitTimeout", self.DEFAULT_TIMEOUT))
         except ValueError:
-            digit_timeout = self.DEFAULT_TIMEOUT * 1000
+            digit_timeout = self.DEFAULT_TIMEOUT
         if digit_timeout < 1:
-            raise RESTFormatException("GetDigits 'digit_timeout' must be a positive integer")
+            raise RESTFormatException("GetDigits 'digitTimeout' must be a positive integer")
 
         finish_on_key = self.extract_attribute_value("finishOnKey")
         self.play_beep = self.extract_attribute_value("playBeep") == 'true'
