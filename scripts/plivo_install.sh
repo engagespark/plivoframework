@@ -5,13 +5,13 @@
 # Copyright (c) 2011 Plivo Team. See LICENSE for details.
 
 
-PLIVO_GIT_REPO=git://github.com/plivo/plivoframework.git
+PLIVO_GIT_REPO=git://github.com/engagespark/plivoframework.git
 PLIVO_SETUP_SCRIPT=https://raw.github.com/plivo/plivoframework/master/scripts/ez_setup.py
 
 
 BRANCH=$2
 if [ ! $BRANCH ]; then
-    BRANCH=master
+    BRANCH=es-master
 fi
 
 #####################################################
@@ -233,7 +233,7 @@ if [ "$CONFIG_OVERWRITE" = "yes" ]; then
     mkdir -p $REAL_PATH/etc/plivo &>/dev/null
     mkdir -p $REAL_PATH/etc/plivo/cache &>/dev/null
     cd $REAL_PATH/src/plivo
-    git checkout $BRANCH 
+    git checkout $BRANCH
     cp -f $REAL_PATH/src/plivo/src/config/default.conf $REAL_PATH/etc/plivo/default.conf
     cp -f $REAL_PATH/src/plivo/src/config/cache.conf $REAL_PATH/etc/plivo/cache/cache.conf
 fi
