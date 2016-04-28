@@ -1,3 +1,14 @@
+engageSPARK specifics
+
+Installing 
+~~~~~~~~~~
+
+ * create a virtualenv
+ * install the dependencies using `requirements.txt` (watch the gevent version!!) 
+ * `pip install --editable .
+
+----
+
 Plivo Framework
 -----
 
