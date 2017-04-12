@@ -185,7 +185,7 @@ source $REAL_PATH/bin/activate
 
 # force installation of gevent 1.03a
 pip uninstall gevent
-pip install -e git+https://github.com/gevent/gevent@4d8f7d58a772cbeaec161e8931e8b65c841ba38d
+pip install -e git+https://github.com/gevent/gevent@4d8f7d58a772cbeaec161e8931e8b65c841ba38d#egg=gevent
 
 # Install plivo
 pip install -e git+${PLIVO_GIT_REPO}@${BRANCH}#egg=plivo
