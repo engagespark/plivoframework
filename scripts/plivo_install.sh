@@ -6,7 +6,7 @@
 
 
 PLIVO_GIT_REPO=git://github.com/engagespark/plivoframework.git
-PLIVO_SETUP_SCRIPT=https://raw.github.com/plivo/plivoframework/master/scripts/ez_setup.py
+PLIVO_SETUP_SCRIPT=https://raw.github.com/engagespark/plivoframework/es-master/scripts/ez_setup.py
 
 
 BRANCH=$2
