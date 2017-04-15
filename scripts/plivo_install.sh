@@ -183,9 +183,9 @@ esac
 virtualenv --no-site-packages $REAL_PATH
 source $REAL_PATH/bin/activate
 
-# force installation of gevent 1.03a
+# force installation of gevent 1.1.0
 pip uninstall gevent
-pip install -e git+https://github.com/gevent/gevent@4d8f7d58a772cbeaec161e8931e8b65c841ba38d#egg=gevent
+pip install gevent==1.1.0
 
 # Install plivo
 pip install -e git+${PLIVO_GIT_REPO}@${BRANCH}#egg=plivo

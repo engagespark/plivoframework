@@ -26,7 +26,7 @@ class OutboundEventSocket(EventSocket):
     A new instance of this class is created for every call/ session from FreeSWITCH.
     '''
     def __init__(self, socket, address, filter="ALL",
-                 connect_timeout=60, eventjson=True, 
+                 connect_timeout=60, eventjson=True,
                  pool_size=5000, trace=False):
         EventSocket.__init__(self, filter, eventjson, pool_size, trace=trace)
         self.transport = OutboundTransport(socket, address, connect_timeout)
@@ -109,30 +109,30 @@ class OutboundServer(StreamServer):
 
     def __init__(self, address, handle_class, filter="ALL"):
         self._filter = filter
-        #Define the Class that will handle process when receiving message
+        # Define the Class that will handle process when receiving message
         self._requestClass = handle_class
-        StreamServer.__init__(self, address, self.do_handle, 
+        StreamServer.__init__(self, address, self.__handle,
                         backlog=BACKLOG, spawn=gevent.spawn_raw)
 
-    def do_handle(self, socket, address):
+    def __handle(self, socket, address):
         try:
             self.handle_request(socket, address)
         finally:
             self.finish_request(socket, address)
 
     def finish_request(self, socket, address):
-        try: 
+        try:
             socket.shutdown(2)
         except:
             pass
-        try: 
+        try:
             socket.close()
         except:
             pass
 
     def handle_request(self, socket, address):
         self._requestClass(socket, address, self._filter)
-        
+
 
 
 
