@@ -224,13 +224,16 @@ class HTTPRequest:
             res = urllib2.urlopen(req).read()
         except urllib2.HTTPError as e:
             # Retry on 502 - Bad Gateway, 503 - Service Unavailable
+            # nginx returns 502 if there is no response from esee (when esee is flooded with requests)
+            # Plivo needs to pause and retry so that an ongoing call will not be hangup
             if e.code in [502, 503]:
-                log.warn("Can't connect to ESEE, possible high load happening at this instance.")
+                log.info("Can't connect to ESEE, possible high load happening at this instance.")
                 raise e
         except urllib2.URLError as e:
             # Retry on error 111 (connection refused). This is where there is no nginx in between plivo and esee
+            # This is for the same situation as the previous except block
             if e.reason.errno == 111:
-                log.warn("Connection refused to ESEE, possible high load at this instance or ESEE is down.")
+                log.info("Connection refused to ESEE, possible high load at this instance or ESEE is down.")
                 raise e
 
         if log:
