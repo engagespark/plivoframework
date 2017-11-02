@@ -17,6 +17,7 @@ import urlparse
 import uuid
 import traceback
 import re
+import time
 import ujson as json
 from werkzeug.datastructures import MultiDict
 
@@ -101,6 +102,20 @@ def is_valid_sound_proto(value):
         return False
     return True if _valid_sound_proto_re.match(value) else False
 
+def retry(retry_count=3, delay=0):
+    def wrapper(func):
+        def wrap(*args, **kwargs):
+            for i in range(1, retry_count + 1):
+                try:
+                    ret = func(*args, **kwargs)
+                    return ret
+                except Exception:
+                    if i == retry_count:
+                        raise
+                    time.sleep(delay)
+        return wrap
+    return wrapper
+
 
 class HTTPErrorProcessor(urllib2.HTTPErrorProcessor):
     def https_response(self, request, response):
@@ -184,6 +199,7 @@ class HTTPRequest:
             _request.add_header("X-PLIVO-SIGNATURE", "%s" % signature)
         return _request
 
+    @retry(3, 1)
     def fetch_response(self, uri, params={}, method='POST', log=None):
         if not method in ('GET', 'POST'):
             raise NotImplementedError('HTTP %s method not implemented' \
@@ -202,8 +218,24 @@ class HTTPRequest:
         if log:
             log.info("Fetching %s %s with %s" \
                             % (method, uri, _params))
-        req = self._prepare_http_request(uri, _params, method)
-        res = urllib2.urlopen(req).read()
+
+        try:
+            req = self._prepare_http_request(uri, _params, method)
+            res = urllib2.urlopen(req).read()
+        except urllib2.HTTPError as e:
+            # Retry on 502 - Bad Gateway, 503 - Service Unavailable
+            # nginx returns 502 if there is no response from esee (when esee is flooded with requests)
+            # Plivo needs to pause and retry so that an ongoing call will not be hangup
+            if e.code in [502, 503]:
+                log.info("Can't connect to ESEE, possible high load happening at this instance.")
+                raise e
+        except urllib2.URLError as e:
+            # Retry on error 111 (connection refused). This is where there is no nginx in between plivo and esee
+            # This is for the same situation as the previous except block
+            if e.reason.errno == 111:
+                log.info("Connection refused to ESEE, possible high load at this instance or ESEE is down.")
+                raise e
+
         if log:
             log.info("Sent to %s %s with %s -- Result: %s" \
                                 % (method, uri, _params, res))
