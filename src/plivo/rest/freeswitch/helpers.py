@@ -17,7 +17,7 @@ import urlparse
 import uuid
 import traceback
 import re
-import time
+import gevent
 import ujson as json
 from werkzeug.datastructures import MultiDict
 
@@ -112,7 +112,7 @@ def retry(retry_count=3, delay=0):
                 except Exception:
                     if i == retry_count:
                         raise
-                    time.sleep(delay)
+                    gevent.sleep(delay)
         return wrap
     return wrapper
 
@@ -199,7 +199,7 @@ class HTTPRequest:
             _request.add_header("X-PLIVO-SIGNATURE", "%s" % signature)
         return _request
 
-    @retry(3, 1)
+    @retry(3, 0.5)
     def fetch_response(self, uri, params={}, method='POST', log=None):
         if not method in ('GET', 'POST'):
             raise NotImplementedError('HTTP %s method not implemented' \
@@ -230,9 +230,10 @@ class HTTPRequest:
                 log.info("Can't connect to ESEE, possible high load happening at this instance.")
                 raise e
         except urllib2.URLError as e:
-            # Retry on error 111 (connection refused). This is where there is no nginx in between plivo and esee
+            # Retry on error 99 (cannot assign requested address 111 (connection refused)
+            # This is where there is no nginx in between plivo and esee
             # This is for the same situation as the previous except block
-            if e.reason.errno == 111:
+            if e.reason.errno in [99, 111]:
                 log.info("Connection refused to ESEE, possible high load at this instance or ESEE is down.")
                 raise e
 
